@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="description" content="Rust">
+    <meta name="author" content="Marco Hoekstra">
+    <meta name="license" content="https://www.gnu.org/licenses/old-licenses/gpl-2.0.html">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta charset="UTF-8">
+    <title>Rust</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Mona+Sans:ital,wght@0,200..900;1,200..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/main.css">
+    <style>
+        #modal {
+            display:none;
+        }
+        #modal.active {
+            display:block;
+        }
+        #modal .background {
+            position: absolute;
+            top:0;
+            left:0;
+            width:100vw;
+            height:100vh;
+            background: rgba(0,0,0,0.2);
+        }
+        #modal .content {
+            /*display:none;*/
+            position:absolute;
+            top: 50%;
+            left:50%;
+            transform:translateX(-50%) translateY(-50%);
+            width:350px;
+            height:250px;
+            background: #f1f1f1;
+        }
+
+        #modal .top-actions {
+            position:absolute;
+            top: 10px;
+            right: 10px;
+            display:flex;
+            flex-direction: row;
+            gap:10px;
+        }
+        
+        #modal .top-actions .action {
+            padding:0.2em 0.5em;
+            border:1px solid grey;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        #modal .top-actions .action.exit {
+            border-color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="backgorund" aria-hidden="true">
+        <div class="disc disc1"></div>
+        <div class="disc disc2"></div>
+        <div class="disc disc3"></div>
+    </div>
+
+    <div id="main_container" role="main">
+        <h1>Rust</h1> 
+
+        <table>
+            <thead>
+                <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Group</th>
+                    <th scope="col">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="meanings"></tbody>
+        </table>
+
+        <button class="blue add_meaning" type="button" id="add_meaning">Add meaning</button>
+    </div>
+
+    <div id="modal">
+        <div class="background"></div>
+        <div class="top-actions">
+            <div class="action exit">Cancel</div>
+        </div>
+        <div class="content"></div>
+    </div>
+
+    <script>
+        const add_button = document.getElementById('add_meaning');
+        const modal = document.getElementById('modal');
+
+        let meaning_groups = null;
+        let meanings = null;
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function find_meaning_group( group_id ) {
+            return meaning_groups.find(group => group.id == group_id);
+        }
+
+        function find_meaning( meaning_id ) {
+            return meanings.find(meaning => meaning.id == meaning_id);
+        }
+
+        async function fetch_meanings() {
+            const res = await fetch('/get_meanings');
+            const data = await res.json();
+            
+            meanings = data;
+            render_meanings( data );
+        }
+
+        async function fetch_meaning_groups() {
+            const res = await fetch('/get_meaning_groups');
+            const data = await res.json();
+            
+            meaning_groups = data;
+            console.log(meaning_groups);
+        }
+
+        async function render_meanings( data ) {
+            const items = data;
+            const table = document.getElementById('meanings');
+   
+            table.innerHTML = "";
+
+            // wait till groups have loaded
+            while (!meaning_groups)
+            {
+                await sleep(500);
+            }
+            console.log(`found ${meaning_groups.length} meaning groups`);
+
+            items.forEach(item => {
+                console.log(item);
+
+                const row = document.createElement('tr');
+          
+                // name
+                const td_name = document.createElement('td');
+                td_name.textContent = item.name;
+                
+                // group
+                const td_group = document.createElement('td');
+                const group = find_meaning_group( item.group_id );
+                td_group.textContent = group ? group.name : 'no group';
+
+                // actions
+                const td_actions = document.createElement('td');
+                const btn_edit = document.createElement('button');
+                btn_edit.textContent = 'Edit';
+                btn_edit.onclick = () => edit_meaning(item.id);
+                btn_edit.setAttribute('class', 'blue');
+
+                td_actions.appendChild(btn_edit);
+
+                row.appendChild(td_name);
+                row.appendChild(td_group);
+                row.appendChild(td_actions);
+
+                table.appendChild(row);
+            });
+        }
+
+        function open_modal(){
+            modal.classList.add("active");
+        }
+
+        function close_modal(){
+            modal.classList.remove("active");
+        }
+
+        function edit_meaning( meaning_id ) {
+            open_meaning_form(async function(payload){
+                try {
+                    const res = await fetch('/edit_meaning', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (res.ok) {
+                        console.log("Successfully modified");
+
+                        fetch_meanings();
+                        close_modal();
+                    } else {
+                        console.log("Error: Edit failed!");
+                    }
+                } catch (err) {
+                    console.log("Network error: " + err);
+                }
+            }, meaning_id);
+        }
+
+        async function open_meaning_form( callback, meaning_id = false )
+        {
+            const res = await fetch('/get_form');
+            const formHtml = await res.text();
+
+            open_modal();
+
+            // get form template
+            const content = modal.querySelector('.content')
+            content.innerHTML = `${formHtml}`;
+
+            // reference the form element
+            const form = document.getElementById('meaning_form');
+            
+            // set group select options
+            const group_selector = form.querySelector('#groups')
+            meaning_groups.forEach(group => {
+                console.log(group);
+                const option = document.createElement('option');
+                option.setAttribute('value', group.id);
+                option.textContent = group.name;
+                group_selector.appendChild(option);
+            });
+
+            // set current meaning data in edit mode
+            const meaning = find_meaning( meaning_id )
+            if ( meaning ) {
+                console.log(meaning);
+
+                form.elements['name'].value = meaning.name;
+                form.elements['details'].value = meaning.details;
+
+                form.elements['group_id'].value = meaning.group_id;                
+            }
+            
+            // handle form submission
+            form.onsubmit = async (event) => {
+                event.preventDefault();
+
+                const formData = new FormData(form);
+                const payload = {
+                    id          : meaning_id || 0,
+                    group_id    : 0,
+                    name        : formData.get('name'),
+                    details     : formData.get('details')
+                };
+
+                console.log(payload);
+                callback(payload)
+            };
+        }
+
+        add_button.onclick = async () => {
+            open_meaning_form(async function(payload){
+                console.log(payload);
+
+                try {
+                    const res = await fetch('/add_meaning', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (res.ok) {
+                        console.log("Successfully added");
+
+                        fetch_meanings();
+                        close_modal();
+                    } else {
+                        console.log("Error: Adding failed!");
+                    }
+                } catch (err) {
+                    console.log("Network error: " + err);
+                }
+            });
+        };
+
+        modal.querySelector('.exit').onclick = async () => {
+            close_modal();
+        };
+
+        (function () {
+            fetch_meaning_groups();
+            fetch_meanings();
+        })();
+    </script>
+</body>
+</html>

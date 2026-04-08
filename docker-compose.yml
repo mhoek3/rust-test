@@ -1,0 +1,37 @@
+version: '3.8'
+name: rust-test
+
+services:
+
+  db:
+    image: mysql:8.0
+    container_name: rs_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: rs_db
+      MYSQL_USER: rs_user
+      MYSQL_PASSWORD: rs_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+      - ./sql/rust.sql:/docker-entrypoint-initdb.d/init.sql
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: rs_phpmyadmin
+    restart: always
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      # comment URI and COOKIE when using dedicated ports above
+      #PMA_ABSOLUTE_URI: http://localhost/phpmyadmin/
+      #PMA_COOKIE_SECURE: 0
+    depends_on:
+      - db
+
+volumes:
+  dbdata:
