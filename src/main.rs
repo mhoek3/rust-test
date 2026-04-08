@@ -16,11 +16,9 @@ mod models {
     pub mod meaning_group;
 }
 use models::meaning::{
-    CreateMeaning, 
     Meaning
 };
 use models::meaning_group::{
-    CreateMeaningGroup, 
     MeaningGroup
 };
 
@@ -113,11 +111,11 @@ async fn get_meanings(
 
 async fn edit_meaning(
     State(db): State<MySqlPool>,
-    Json(payload): Json<CreateMeaning>,
+    Json(payload): Json<Meaning>
 ) -> StatusCode {
 
     println!("{:?}", payload);
-    
+
     let result = sqlx::query(
         "UPDATE meanings SET group_id = ?, name = ?, details = ? WHERE id = ?"
     )
@@ -139,7 +137,7 @@ async fn edit_meaning(
 
 async fn add_meaning(
     State(db): State<MySqlPool>,
-    Json(payload): Json<CreateMeaning>,
+    Json(payload): Json<Meaning>,
 ) -> StatusCode {
 
     if SIMULATE {
