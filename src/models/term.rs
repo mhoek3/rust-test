@@ -5,7 +5,7 @@ use sqlx::FromRow;
 #[derive(Debug, Serialize, Deserialize, FromRow)]
 pub struct Term {
     pub id: u64,    // unsigned i suppose? , i64 signed?
-    pub group_id: u64,
+    pub term_kind: u64,
     pub name: String,
     pub details: String,
 }

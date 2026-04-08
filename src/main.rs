@@ -13,13 +13,13 @@ use sqlx::MySqlPool;
 
 mod models {
     pub mod term;
-    pub mod meaning_group;
+    pub mod term_kind;
 }
 use models::term::{
     Term
 };
-use models::meaning_group::{
-    MeaningGroup
+use models::term_kind::{
+    TermKind
 };
 
 const SIMULATE : bool = false;
@@ -53,31 +53,31 @@ async fn get_term_form() -> Html<String> {
 //     "#)
 // }
 
-async fn get_meaning_groups(
+async fn get_term_kinds(
     State(db): State<MySqlPool>,
-) -> (StatusCode, Json<Vec<MeaningGroup>>) {
-    let mut groups = Vec::new();
+) -> (StatusCode, Json<Vec<TermKind>>) {
+    let mut kinds = Vec::new();
 
     if SIMULATE {
         for i in 1..=5 {
-            let group = MeaningGroup {
+            let kind = TermKind {
                 id: i,
-                name: format!("Group {}", i),
+                name: format!("Kind {}", i),
             };
-            groups.push(group);
+            kinds.push(kind);
         }
 
-        return (StatusCode::OK, Json(groups));
+        return (StatusCode::OK, Json(kinds));
     }
 
-    groups = sqlx::query_as::<_, MeaningGroup>(
-        "SELECT id, name FROM meaning_group"
+    kinds = sqlx::query_as::<_, TermKind>(
+        "SELECT id, name FROM term_kind"
     )
     .fetch_all(&db)
     .await
     .unwrap();
 
-    (StatusCode::OK, Json(groups))
+    (StatusCode::OK, Json(kinds))
 }
 
 async fn get_terms(
@@ -89,7 +89,7 @@ async fn get_terms(
         for i in 1..=5 {
             let term = Term {
                 id: i,
-                group_id: i % 1,
+                term_kind: i % 1,
                 name: format!("Demo Name {}", i),
                 details: format!("Demo Details {}", i),
             };
@@ -100,7 +100,7 @@ async fn get_terms(
     }
 
     terms = sqlx::query_as::<_, Term>(
-        "SELECT id, group_id, name, details FROM terms"
+        "SELECT id, term_kind, name, details FROM terms"
     )
     .fetch_all(&db)
     .await
@@ -117,9 +117,9 @@ async fn edit_term(
     println!("{:?}", payload);
 
     let result = sqlx::query(
-        "UPDATE terms SET group_id = ?, name = ?, details = ? WHERE id = ?"
+        "UPDATE terms SET term_kind = ?, name = ?, details = ? WHERE id = ?"
     )
-    .bind(&payload.group_id)
+    .bind(&payload.term_kind)
     .bind(&payload.name)
     .bind(&payload.details)
     .bind(&payload.id)  // Use payload.id for the WHERE clause
@@ -147,9 +147,9 @@ async fn add_term(
     }
 
     let result = sqlx::query(
-        "INSERT INTO terms (group_id, name, details) VALUES (?, ?, ?)"
+        "INSERT INTO terms (term_kind, name, details) VALUES (?, ?, ?)"
     )
-    .bind(&payload.group_id)
+    .bind(&payload.term_kind)
     .bind(&payload.name)
     .bind(&payload.details)
     .execute(&db)
@@ -178,7 +178,7 @@ async fn main() {
 
     let app = Router::new()
         .route("/", get(index))
-        .route("/get_meaning_groups", get(get_meaning_groups))
+        .route("/get_term_kinds", get(get_term_kinds))
         .route("/get_term_form", get(get_term_form))
         .route("/get_terms", get(get_terms))
         .route("/add_term", post(add_term))

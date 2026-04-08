@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: db:3306
--- Gegenereerd op: 08 apr 2026 om 08:20
+-- Gegenereerd op: 08 apr 2026 om 08:33
 -- Serverversie: 8.0.45
 -- PHP-versie: 8.3.30
 
@@ -24,31 +24,12 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- Tabelstructuur voor tabel `meaning_group`
---
-
-CREATE TABLE `meaning_group` (
-  `id` int UNSIGNED NOT NULL,
-  `name` varchar(255) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
---
--- Gegevens worden geëxporteerd voor tabel `meaning_group`
---
-
-INSERT INTO `meaning_group` (`id`, `name`) VALUES
-(1, 'Group 1'),
-(2, 'Group 2');
-
--- --------------------------------------------------------
-
---
 -- Tabelstructuur voor tabel `terms`
 --
 
 CREATE TABLE `terms` (
   `id` int UNSIGNED NOT NULL,
-  `group_id` int UNSIGNED NOT NULL DEFAULT '0',
+  `term_kind` int UNSIGNED NOT NULL DEFAULT '0',
   `name` varchar(255) NOT NULL,
   `details` text NOT NULL,
   `date_created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -58,22 +39,35 @@ CREATE TABLE `terms` (
 -- Gegevens worden geëxporteerd voor tabel `terms`
 --
 
-INSERT INTO `terms` (`id`, `group_id`, `name`, `details`, `date_created`) VALUES
+INSERT INTO `terms` (`id`, `term_kind`, `name`, `details`, `date_created`) VALUES
 (1, 1, 'test', 'test', '2026-04-07 12:43:19'),
 (2, 1, 'test 2', 'test2', '2026-04-07 12:43:19'),
 (3, 2, 'test 3', 'test 3', '2026-04-07 12:44:36'),
 (4, 2, 'test 4', 'test 4', '2026-04-07 12:44:36'),
 (11, 2, 'test 5', 'test 5', '2026-04-08 08:18:54');
 
+-- --------------------------------------------------------
+
+--
+-- Tabelstructuur voor tabel `term_kind`
+--
+
+CREATE TABLE `term_kind` (
+  `id` int UNSIGNED NOT NULL,
+  `name` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Gegevens worden geëxporteerd voor tabel `term_kind`
+--
+
+INSERT INTO `term_kind` (`id`, `name`) VALUES
+(1, 'Kind 1'),
+(2, 'Kind 2');
+
 --
 -- Indexen voor geëxporteerde tabellen
 --
-
---
--- Indexen voor tabel `meaning_group`
---
-ALTER TABLE `meaning_group`
-  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexen voor tabel `terms`
@@ -82,20 +76,26 @@ ALTER TABLE `terms`
   ADD PRIMARY KEY (`id`);
 
 --
--- AUTO_INCREMENT voor geëxporteerde tabellen
+-- Indexen voor tabel `term_kind`
 --
+ALTER TABLE `term_kind`
+  ADD PRIMARY KEY (`id`);
 
 --
--- AUTO_INCREMENT voor een tabel `meaning_group`
+-- AUTO_INCREMENT voor geëxporteerde tabellen
 --
-ALTER TABLE `meaning_group`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT voor een tabel `terms`
 --
 ALTER TABLE `terms`
   MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+
+--
+-- AUTO_INCREMENT voor een tabel `term_kind`
+--
+ALTER TABLE `term_kind`
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

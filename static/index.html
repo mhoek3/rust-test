@@ -72,7 +72,7 @@
             <thead>
                 <tr>
                     <th scope="col">Name</th>
-                    <th scope="col">Group</th>
+                    <th scope="col">Kind</th>
                     <th scope="col">Actions</th>
                 </tr>
             </thead>
@@ -94,19 +94,19 @@
         const add_button = document.getElementById('add_term');
         const modal = document.getElementById('modal');
 
-        let meaning_groups = null;
+        let term_kinds = null;
         let terms = null;
 
         function sleep(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
         }
 
-        function find_meaning_group( group_id ) {
-            return meaning_groups.find(group => group.id == group_id);
+        function find_term_kind( kind ) {
+            return term_kinds.find(item => item.id == kind);
         }
 
         function find_term( term_id ) {
-            return terms.find(term => term.id == term_id);
+            return terms.find(item => item.id == term_id);
         }
 
         async function fetch_terms() {
@@ -117,12 +117,12 @@
             render_terms( data );
         }
 
-        async function fetch_meaning_groups() {
-            const res = await fetch('/get_meaning_groups');
+        async function fetch_term_kinds() {
+            const res = await fetch('/get_term_kinds');
             const data = await res.json();
             
-            meaning_groups = data;
-            console.log(meaning_groups);
+            term_kinds = data;
+            console.log(term_kinds);
         }
 
         async function render_terms( data ) {
@@ -131,12 +131,12 @@
    
             table.innerHTML = "";
 
-            // wait till groups have loaded
-            while (!meaning_groups)
+            // wait till kinds have loaded
+            while (!term_kinds)
             {
                 await sleep(500);
             }
-            console.log(`found ${meaning_groups.length} meaning groups`);
+            console.log(`found ${term_kinds.length} term kinds`);
 
             items.forEach(item => {
                 console.log(item);
@@ -147,10 +147,10 @@
                 const td_name = document.createElement('td');
                 td_name.textContent = item.name;
                 
-                // group
-                const td_group = document.createElement('td');
-                const group = find_meaning_group( item.group_id );
-                td_group.textContent = group ? group.name : 'no group';
+                // kind
+                const td_kind = document.createElement('td');
+                const kind = find_term_kind( item.term_kind );
+                td_kind.textContent = kind ? kind.name : 'no kind';
 
                 // actions
                 const td_actions = document.createElement('td');
@@ -162,7 +162,7 @@
                 td_actions.appendChild(btn_edit);
 
                 row.appendChild(td_name);
-                row.appendChild(td_group);
+                row.appendChild(td_kind);
                 row.appendChild(td_actions);
 
                 table.appendChild(row);
@@ -212,27 +212,24 @@
             content.innerHTML = `${formHtml}`;
 
             // reference the form element
-            const form = document.getElementById('meaning_form');
+            const form = document.getElementById('term_form');
             
-            // set group select options
-            const group_selector = form.querySelector('#groups')
-            meaning_groups.forEach(group => {
-                console.log(group);
+            // set kind select options
+            const kind_selector = form.querySelector('#kinds')
+            term_kinds.forEach(kind => {
                 const option = document.createElement('option');
-                option.setAttribute('value', group.id);
-                option.textContent = group.name;
-                group_selector.appendChild(option);
+                option.setAttribute('value', kind.id);
+                option.textContent = kind.name;
+                kind_selector.appendChild(option);
             });
 
             // set current term data in edit mode
             const term = find_term( term_id )
             if ( term ) {
-                console.log(term);
-
                 form.elements['name'].value = term.name;
                 form.elements['details'].value = term.details;
 
-                form.elements['group_id'].value = term.group_id;                
+                form.elements['term_kind'].value = term.term_kind;                
             }
             
             // handle form submission
@@ -242,7 +239,7 @@
                 const formData = new FormData(form);
                 const payload = {
                     id          : term_id || 0,
-                    group_id    : parseInt(formData.get('group_id')),
+                    term_kind    : parseInt(formData.get('term_kind')),
                     name        : formData.get('name'),
                     details     : formData.get('details')
                 };
@@ -282,7 +279,7 @@
         };
 
         (function () {
-            fetch_meaning_groups();
+            fetch_term_kinds();
             fetch_terms();
         })();
     </script>
