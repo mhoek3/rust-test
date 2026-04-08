@@ -1,9 +1,20 @@
 <form id="term_form">
-    <input type="text" name="name">
-    <textarea name="details" cols="10"></textarea>
-    <select name="term_kind" id="kinds">
-        <option value="0">no kind</option>
-    </select>
+    <div class="form-group">
+        <label for="name">Term Name</label>
+        <input type="text" name="name" id="name" placeholder="Enter term name">
+    </div>
 
-    <button type="submit" id="submit">Save</button>
+    <div class="form-group">
+        <label for="details">Details</label>
+        <textarea name="details" id="details" cols="10" placeholder="Enter details"></textarea>
+    </div>
+
+    <div class="form-group">
+        <label for="kinds">Term Kind</label>
+        <select name="term_kind" id="kinds">
+            <option value="0">No kind</option>
+        </select>
+    </div>
+
+    <button class="blue" type="submit" id="submit">Save</button>
 </form>
