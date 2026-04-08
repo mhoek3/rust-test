@@ -76,10 +76,10 @@
                     <th scope="col">Actions</th>
                 </tr>
             </thead>
-            <tbody id="meanings"></tbody>
+            <tbody id="terms"></tbody>
         </table>
 
-        <button class="blue add_meaning" type="button" id="add_meaning">Add meaning</button>
+        <button class="blue add_term" type="button" id="add_term">Add term</button>
     </div>
 
     <div id="modal">
@@ -91,11 +91,11 @@
     </div>
 
     <script>
-        const add_button = document.getElementById('add_meaning');
+        const add_button = document.getElementById('add_term');
         const modal = document.getElementById('modal');
 
         let meaning_groups = null;
-        let meanings = null;
+        let terms = null;
 
         function sleep(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
@@ -105,16 +105,16 @@
             return meaning_groups.find(group => group.id == group_id);
         }
 
-        function find_meaning( meaning_id ) {
-            return meanings.find(meaning => meaning.id == meaning_id);
+        function find_term( term_id ) {
+            return terms.find(term => term.id == term_id);
         }
 
-        async function fetch_meanings() {
-            const res = await fetch('/get_meanings');
+        async function fetch_terms() {
+            const res = await fetch('/get_terms');
             const data = await res.json();
             
-            meanings = data;
-            render_meanings( data );
+            terms = data;
+            render_terms( data );
         }
 
         async function fetch_meaning_groups() {
@@ -125,9 +125,9 @@
             console.log(meaning_groups);
         }
 
-        async function render_meanings( data ) {
+        async function render_terms( data ) {
             const items = data;
-            const table = document.getElementById('meanings');
+            const table = document.getElementById('terms');
    
             table.innerHTML = "";
 
@@ -156,7 +156,7 @@
                 const td_actions = document.createElement('td');
                 const btn_edit = document.createElement('button');
                 btn_edit.textContent = 'Edit';
-                btn_edit.onclick = () => edit_meaning(item.id);
+                btn_edit.onclick = () => edit_term(item.id);
                 btn_edit.setAttribute('class', 'blue');
 
                 td_actions.appendChild(btn_edit);
@@ -177,10 +177,10 @@
             modal.classList.remove("active");
         }
 
-        function edit_meaning( meaning_id ) {
-            open_meaning_form(async function(payload){
+        function edit_term( term_id ) {
+            open_term_form(async function(payload){
                 try {
-                    const res = await fetch('/edit_meaning', {
+                    const res = await fetch('/edit_term', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
@@ -189,7 +189,7 @@
                     if (res.ok) {
                         console.log("Successfully modified");
 
-                        fetch_meanings();
+                        fetch_terms();
                         close_modal();
                     } else {
                         console.log("Error: Edit failed!");
@@ -197,12 +197,12 @@
                 } catch (err) {
                     console.log("Network error: " + err);
                 }
-            }, meaning_id);
+            }, term_id);
         }
 
-        async function open_meaning_form( callback, meaning_id = false )
+        async function open_term_form( callback, term_id = false )
         {
-            const res = await fetch('/get_form');
+            const res = await fetch('/get_term_form');
             const formHtml = await res.text();
 
             open_modal();
@@ -224,15 +224,15 @@
                 group_selector.appendChild(option);
             });
 
-            // set current meaning data in edit mode
-            const meaning = find_meaning( meaning_id )
-            if ( meaning ) {
-                console.log(meaning);
+            // set current term data in edit mode
+            const term = find_term( term_id )
+            if ( term ) {
+                console.log(term);
 
-                form.elements['name'].value = meaning.name;
-                form.elements['details'].value = meaning.details;
+                form.elements['name'].value = term.name;
+                form.elements['details'].value = term.details;
 
-                form.elements['group_id'].value = meaning.group_id;                
+                form.elements['group_id'].value = term.group_id;                
             }
             
             // handle form submission
@@ -241,7 +241,7 @@
 
                 const formData = new FormData(form);
                 const payload = {
-                    id          : meaning_id || 0,
+                    id          : term_id || 0,
                     group_id    : parseInt(formData.get('group_id')),
                     name        : formData.get('name'),
                     details     : formData.get('details')
@@ -253,11 +253,11 @@
         }
 
         add_button.onclick = async () => {
-            open_meaning_form(async function(payload){
+            open_term_form(async function(payload){
                 console.log(payload);
 
                 try {
-                    const res = await fetch('/add_meaning', {
+                    const res = await fetch('/add_term', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
@@ -266,7 +266,7 @@
                     if (res.ok) {
                         console.log("Successfully added");
 
-                        fetch_meanings();
+                        fetch_terms();
                         close_modal();
                     } else {
                         console.log("Error: Adding failed!");
@@ -283,7 +283,7 @@
 
         (function () {
             fetch_meaning_groups();
-            fetch_meanings();
+            fetch_terms();
         })();
     </script>
 </body>

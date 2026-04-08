@@ -12,11 +12,11 @@ use sqlx::mysql::MySqlPoolOptions;
 use sqlx::MySqlPool;
 
 mod models {
-    pub mod meaning;
+    pub mod term;
     pub mod meaning_group;
 }
-use models::meaning::{
-    Meaning
+use models::term::{
+    Term
 };
 use models::meaning_group::{
     MeaningGroup
@@ -33,9 +33,9 @@ async fn index() -> Html<String> {
     Html(html_content)
 }
 
-async fn get_form() -> Html<String> {
+async fn get_term_form() -> Html<String> {
     // add some caching later ..
-    let html_content = fs::read_to_string("static/form.html")
+    let html_content = fs::read_to_string("static/forms/term.html")
         .await
         .expect("Failed to read HTML file");
     Html(html_content)
@@ -43,7 +43,7 @@ async fn get_form() -> Html<String> {
 
 // async fn get_form() -> Html<&'static str> {
 //     Html(r#"
-//         <form id="meaning_form">
+//         <form id="term_form">
 //             <label for="name">Name:</label>
 //             <input type="text" id="name" name="name"><br>
 //             <label for="details">Details:</label>
@@ -80,44 +80,44 @@ async fn get_meaning_groups(
     (StatusCode::OK, Json(groups))
 }
 
-async fn get_meanings(
+async fn get_terms(
     State(db): State<MySqlPool>,
-) -> (StatusCode, Json<Vec<Meaning>>) {
-    let mut meanings = Vec::new();
+) -> (StatusCode, Json<Vec<Term>>) {
+    let mut terms = Vec::new();
 
     if SIMULATE {
         for i in 1..=5 {
-            let meaning = Meaning {
+            let term = Term {
                 id: i,
                 group_id: i % 1,
                 name: format!("Demo Name {}", i),
                 details: format!("Demo Details {}", i),
             };
-            meanings.push(meaning);
+            terms.push(term);
         }
 
-        return (StatusCode::OK, Json(meanings));
+        return (StatusCode::OK, Json(terms));
     }
 
-    meanings = sqlx::query_as::<_, Meaning>(
-        "SELECT id, group_id, name, details FROM meanings"
+    terms = sqlx::query_as::<_, Term>(
+        "SELECT id, group_id, name, details FROM terms"
     )
     .fetch_all(&db)
     .await
     .unwrap();
 
-    (StatusCode::OK, Json(meanings))
+    (StatusCode::OK, Json(terms))
 }
 
-async fn edit_meaning(
+async fn edit_term(
     State(db): State<MySqlPool>,
-    Json(payload): Json<Meaning>
+    Json(payload): Json<Term>
 ) -> StatusCode {
 
     println!("{:?}", payload);
 
     let result = sqlx::query(
-        "UPDATE meanings SET group_id = ?, name = ?, details = ? WHERE id = ?"
+        "UPDATE terms SET group_id = ?, name = ?, details = ? WHERE id = ?"
     )
     .bind(&payload.group_id)
     .bind(&payload.name)
@@ -135,9 +135,9 @@ async fn edit_meaning(
     }
 }
 
-async fn add_meaning(
+async fn add_term(
     State(db): State<MySqlPool>,
-    Json(payload): Json<Meaning>,
+    Json(payload): Json<Term>,
 ) -> StatusCode {
 
     if SIMULATE {
@@ -147,7 +147,7 @@ async fn add_meaning(
     }
 
     let result = sqlx::query(
-        "INSERT INTO meanings (group_id, name, details) VALUES (?, ?, ?)"
+        "INSERT INTO terms (group_id, name, details) VALUES (?, ?, ?)"
     )
     .bind(&payload.group_id)
     .bind(&payload.name)
@@ -179,10 +179,10 @@ async fn main() {
     let app = Router::new()
         .route("/", get(index))
         .route("/get_meaning_groups", get(get_meaning_groups))
-        .route("/get_meanings", get(get_meanings))
-        .route("/get_form", get(get_form))
-        .route("/add_meaning", post(add_meaning))
-        .route("/edit_meaning", post(edit_meaning))
+        .route("/get_term_form", get(get_term_form))
+        .route("/get_terms", get(get_terms))
+        .route("/add_term", post(add_term))
+        .route("/edit_term", post(edit_term))
         .with_state(db)
         .nest_service("/static", ServeDir::new("static"));
 
