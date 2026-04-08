@@ -242,7 +242,7 @@
                 const formData = new FormData(form);
                 const payload = {
                     id          : meaning_id || 0,
-                    group_id    : 0,
+                    group_id    : parseInt(formData.get('group_id')),
                     name        : formData.get('name'),
                     details     : formData.get('details')
                 };

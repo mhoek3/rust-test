@@ -115,6 +115,9 @@ async fn edit_meaning(
     State(db): State<MySqlPool>,
     Json(payload): Json<CreateMeaning>,
 ) -> StatusCode {
+
+    println!("{:?}", payload);
+    
     let result = sqlx::query(
         "UPDATE meanings SET group_id = ?, name = ?, details = ? WHERE id = ?"
     )
