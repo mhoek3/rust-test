@@ -164,6 +164,29 @@ async fn add_term(
     }
 }
 
+async fn remove_term(
+    State(db): State<MySqlPool>,
+    Json(payload): Json<Term>
+) -> StatusCode {
+
+    println!("{:?}", payload);
+
+    let result = sqlx::query(
+        "DELETE FROM terms WHERE id = ?"
+    )
+    .bind(&payload.id)  // Use payload.id for the WHERE clause
+    .execute(&db)
+    .await;
+
+    match result {
+        Ok(_) => StatusCode::OK,  // For updates, usually OK
+        Err(err) => {
+            eprintln!("DB error: {:?}", err);
+            StatusCode::INTERNAL_SERVER_ERROR
+        }
+    }
+}
+
 async fn init_db() -> MySqlPool {
     MySqlPoolOptions::new()
         .max_connections(5)
@@ -183,6 +206,7 @@ async fn main() {
         .route("/get_terms", get(get_terms))
         .route("/add_term", post(add_term))
         .route("/edit_term", post(edit_term))
+        .route("/remove_term", post(remove_term))
         .with_state(db)
         .nest_service("/static", ServeDir::new("static"));
 

@@ -9,12 +9,18 @@ window.TermApp = (function(){
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
+    function is_valid_term_id(value) {
+        // check if id is valid, and positive, since is unsigned
+        const num = parseInt(value, 10);
+        return !isNaN(num) && num.toString() === value.toString() && num >= 0;
+    }
+
     function find_term_kind( kind ) {
         return term_kinds.find(item => item.id == kind);
     }
 
     function find_term( term_id ) {
-        return terms.find(item => item.id == term_id);
+        return is_valid_term_id(term_id) ? terms.find(item => item.id == term_id) : false;
     }
 
     async function fetch_terms() {
@@ -62,12 +68,22 @@ window.TermApp = (function(){
 
             // actions
             const td_actions = document.createElement('td');
-            const btn_edit = document.createElement('button');
-            btn_edit.textContent = 'Edit';
-            btn_edit.onclick = () => edit_term(item.id);
-            btn_edit.setAttribute('class', 'blue');
+            {
+                // edit
+                const btn_edit = document.createElement('button');
+                btn_edit.textContent = 'Edit';
+                btn_edit.onclick = () => edit_term(item.id);
+                btn_edit.setAttribute('class', 'blue');
 
-            td_actions.appendChild(btn_edit);
+                // remove
+                const btn_remove = document.createElement('button');
+                btn_remove.textContent = 'Remove';
+                btn_remove.onclick = () => remove_term(item.id);
+                btn_remove.setAttribute('class', 'red');
+
+                td_actions.appendChild(btn_edit);
+                td_actions.appendChild(btn_remove);
+            }
 
             row.appendChild(td_name);
             row.appendChild(td_kind);
@@ -88,6 +104,11 @@ window.TermApp = (function(){
     function edit_term( term_id ) {
         open_term_form(async function(payload){
             try {
+                if ( !is_valid_term_id(term_id) ) {
+                    console.error('term id is invalid');
+                    return;
+                }
+
                 const res = await fetch('/edit_term', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -108,6 +129,39 @@ window.TermApp = (function(){
         }, term_id);
     }
 
+    async function remove_term( term_id ) {
+        try {
+            if ( !is_valid_term_id(term_id) ) {
+                console.error('term id is invalid');
+                return;
+            }
+
+            const payload = {
+                id          : parseInt(term_id) || 0,
+                term_kind   : 0,
+                name        : '',
+                details     : ''
+            };
+
+            const res = await fetch('/remove_term', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                console.log("Successfully removed");
+
+                fetch_terms();
+                close_modal();
+            } else {
+                console.log("Error: Removing failed!");
+            }
+        } catch (err) {
+            console.log("Network error: " + err);
+        }
+    }
+    
     function add_term() {
         open_term_form(async function(payload){
             console.log(payload);
@@ -161,7 +215,6 @@ window.TermApp = (function(){
         if ( term ) {
             form.elements['name'].value = term.name;
             form.elements['details'].value = term.details;
-
             form.elements['term_kind'].value = term.term_kind;                
         }
         
